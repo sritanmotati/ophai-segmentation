@@ -87,7 +87,7 @@ def decoder1(inputs, skip_connections):
 
 def output_block(inputs, n_classes):
     x = Conv2D(n_classes, 1, padding="same")(inputs)
-    x = Activation("softmax")(x)
+    x = Activation("sigmoid")(x)
     return x
 
 def encoder2(inputs):
@@ -114,7 +114,7 @@ def decoder2(inputs, skip_1, skip_2):
 
     return x
 
-def DoubleUNet(input_shape, n_classes=3):
+def doubleunet(input_shape, n_classes=3):
     inputs = Input(input_shape)
     x, skip_1 = encoder1(inputs)
     x = ASPP(x, 64)
