@@ -1,4 +1,6 @@
 from tensorflow import keras
+import tensorflow as tf
+from utils.data_utils import *
 
 def bn_act(x, act=True):
     x = keras.layers.BatchNormalization()(x)
@@ -36,7 +38,7 @@ def upsample_concat_block(x, xskip):
     c = keras.layers.Concatenate()([u, xskip])
     return c
 
-def ResUNet(img_shape, n_classes):
+def resunet(img_shape, n_classes):
     # f = [64,128,256,512,1024]
     f = [32,64,128,256,512]
     inputs = keras.layers.Input(img_shape)
@@ -71,3 +73,35 @@ def ResUNet(img_shape, n_classes):
     outputs = keras.layers.Conv2D(n_classes, (1, 1), activation="softmax")(d4)
     model = keras.models.Model(inputs, outputs)
     return model
+
+class ResUnet:
+    def __init__(self, shape, n_classes):
+        self.shape = shape
+        self.n_classes = n_classes
+        self.model = resunet(self.shape, self.n_classes)
+
+    def summary(self):
+        self.model.summary()
+    
+    def get_gens(self, paths, test_paths, batch_size, val_size):
+        paths_idx = np.random.permutation(np.arange(len(paths)))
+        thres = int(len(paths)*(1-val_size))
+        tp, vp = [paths[x] for x in paths_idx[:thres]], [paths[x] for x in paths_idx[thres:]]
+        return fundus_gen(tp, batch_size, (self.shape[0], self.shape[1])), fundus_gen(vp, batch_size, (self.shape[0], self.shape[1])), fundus_gen(test_paths, batch_size, (self.shape[0], self.shape[1]))
+    
+    def train(self, train_gen, val_gen, train_steps, val_steps):
+        callbacks = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
+        self.model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+        return self.model.fit_generator(train_gen, steps_per_epoch=train_steps, epochs=100, validation_data=val_gen, validation_steps=val_steps, callbacks=callbacks).history
+
+    def predict(self, x):
+        return self.model.predict(x)
+
+    def save(self, path):
+        self.model.save(path)
+
+    def load(self, path):
+        self.model = tf.keras.models.load_model(path)
+
+    def get_model(self):
+        return self.model

@@ -1,6 +1,8 @@
 from tensorflow.keras.layers import *
 from tensorflow.keras.models import Model
 from tensorflow.keras.applications import ResNet50
+import tensorflow as tf
+from utils.data_utils import *
 
 def ASPP(inputs):
     shape = inputs.shape
@@ -34,7 +36,7 @@ def ASPP(inputs):
     y = Activation('relu')(y)
     return y
 
-def DeepLabV3Plus(shape, n_classes):
+def deeplab(shape, n_classes):
     """ Inputs """
     inputs = Input(shape)
 
@@ -70,3 +72,35 @@ def DeepLabV3Plus(shape, n_classes):
     """ Model """
     model = Model(inputs=inputs, outputs=x)
     return model
+
+class DeepLabV3Plus:
+    def __init__(self, shape, n_classes):
+        self.shape = shape
+        self.n_classes = n_classes
+        self.model = deeplab(self.shape, self.n_classes)
+
+    def summary(self):
+        self.model.summary()
+    
+    def get_gens(self, paths, test_paths, batch_size, val_size):
+        paths_idx = np.random.permutation(np.arange(len(paths)))
+        thres = int(len(paths)*(1-val_size))
+        tp, vp = [paths[x] for x in paths_idx[:thres]], [paths[x] for x in paths_idx[thres:]]
+        return fundus_gen(tp, batch_size, (self.shape[0], self.shape[1])), fundus_gen(vp, batch_size, (self.shape[0], self.shape[1])), fundus_gen(test_paths, batch_size, (self.shape[0], self.shape[1]))
+    
+    def train(self, train_gen, val_gen, train_steps, val_steps):
+        callbacks = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
+        self.model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+        return self.model.fit_generator(train_gen, steps_per_epoch=train_steps, epochs=100, validation_data=val_gen, validation_steps=val_steps, callbacks=callbacks).history
+
+    def predict(self, x):
+        return self.model.predict(x)
+
+    def save(self, path):
+        self.model.save(path)
+
+    def load(self, path):
+        self.model = tf.keras.models.load_model(path)
+
+    def get_model(self):
+        return self.model

@@ -1,6 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras.layers import *
 from tensorflow.keras import Model
+from utils.data_utils import *
 
 def down_block(x, filters):
     x = Conv2D(filters, 3, activation='relu', padding='same', kernel_initializer='he_normal')(x)
@@ -16,7 +17,7 @@ def up_block(x, filters, concat, dropout):
     x = down_block(x, filters)
     return x
     
-def UNet(input_size, n_classes, n_filters = 64, dropout = 0.1):
+def unet(input_size, n_classes, n_filters = 64, dropout = 0.1):
     inputs = tf.keras.Input(shape=input_size)
     c1 = down_block(inputs, n_filters)
     p1 = MaxPooling2D((2, 2))(c1)
@@ -45,3 +46,35 @@ def UNet(input_size, n_classes, n_filters = 64, dropout = 0.1):
 
     model = Model(inputs = inputs, outputs = outputs)
     return model
+
+class Unet:
+    def __init__(self, shape, n_classes):
+        self.shape = shape
+        self.n_classes = n_classes
+        self.model = unet(self.shape, self.n_classes)
+
+    def summary(self):
+        self.model.summary()
+    
+    def get_gens(self, paths, test_paths, batch_size, val_size):
+        paths_idx = np.random.permutation(np.arange(len(paths)))
+        thres = int(len(paths)*(1-val_size))
+        tp, vp = [paths[x] for x in paths_idx[:thres]], [paths[x] for x in paths_idx[thres:]]
+        return fundus_gen(tp, batch_size, (self.shape[0], self.shape[1])), fundus_gen(vp, batch_size, (self.shape[0], self.shape[1])), fundus_gen(test_paths, batch_size, (self.shape[0], self.shape[1]))
+    
+    def train(self, train_gen, val_gen, train_steps, val_steps):
+        callbacks = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
+        self.model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+        return self.model.fit_generator(train_gen, steps_per_epoch=train_steps, epochs=100, validation_data=val_gen, validation_steps=val_steps, callbacks=callbacks).history
+
+    def predict(self, x):
+        return self.model.predict(x)
+
+    def save(self, path):
+        self.model.save(path)
+
+    def load(self, path):
+        self.model = tf.keras.models.load_model(path)
+
+    def get_model(self):
+        return self.model
