@@ -271,12 +271,6 @@ class CENet:
     def summary(self):
         print("TBD")
     
-    def get_gens(self, paths, test_paths, batch_size, val_size):
-        paths_idx = np.random.permutation(np.arange(len(paths)))
-        thres = int(len(paths)*(1-val_size))
-        tp, vp = [paths[x] for x in paths_idx[:thres]], [paths[x] for x in paths_idx[thres:]]
-        return fundus_gen(tp, batch_size, (800,800), binary=True, crop=True, channelsFirst=True), fundus_gen(vp, batch_size, (800,800), binary=True, crop=True, channelsFirst=True), fundus_gen(test_paths, batch_size, (800,800), binary=True, crop=True, channelsFirst=True)
-    
     def train(self, train_gen, val_gen, train_steps, val_steps):
         tic=time()
         train_losses = []

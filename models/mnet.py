@@ -96,17 +96,11 @@ class MNet:
     def __init__(self, shape, n_classes):
         self.shape = shape
         self.n_classes = n_classes
-        self.model = DeepModel(400, self.n_classes)
+        self.model = DeepModel(self.shape[0], self.n_classes)
 
     def summary(self):
         self.model.summary()
 
-    def get_gens(self, paths, test_paths, batch_size, val_size):
-        paths_idx = np.random.permutation(np.arange(len(paths)))
-        thres = int(len(paths)*(1-val_size))
-        tp, vp = [paths[x] for x in paths_idx[:thres]], [paths[x] for x in paths_idx[thres:]]
-        return fundus_gen(tp, batch_size, (400,400), crop=True, polar=True), fundus_gen(vp, batch_size, (400,400), crop=True, polar=True), fundus_gen(test_paths, batch_size, (400,400), crop=True, polar=True)
-    
     def train(self, train_gen, val_gen, train_steps, val_steps):
         callbacks = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
         self.model.compile(optimizer=tf.keras.optimizers.SGD(lr=0.0001, momentum=0.9), loss=dice_coef_loss, loss_weights=[0.1, 0.1, 0.1, 0.1, 0.6])

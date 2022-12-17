@@ -61,7 +61,7 @@ def process_pair(x,y,img_size,crop=False,channelsFirst=False,binary=False,polar=
     mask[mask>200] = 2
     mask[mask>2] = 1
     if binary:
-        mask[mask>1] = 1
+        mask[mask>=1] = 1
         mask = np.expand_dims(mask, axis=-1)
     else:
         mask = tf.keras.utils.to_categorical(mask).astype('float32')
@@ -79,7 +79,7 @@ def process_pair(x,y,img_size,crop=False,channelsFirst=False,binary=False,polar=
 
 def fundus_gen(paths, batch_size, img_size, crop=False,channelsFirst=False,binary=False,polar=False):
     while True:
-        batch_paths = np.random.choice(a=paths, size=batch_size)
+        batch_paths = [paths[i] for i in np.random.choice(a=np.arange(len(paths)), size=batch_size)]
         batch_img = []
         batch_mask = []
         for img_path, mask_path in batch_paths:
@@ -89,6 +89,12 @@ def fundus_gen(paths, batch_size, img_size, crop=False,channelsFirst=False,binar
         batch_img = np.array(batch_img) / 255.
         batch_mask = np.array(batch_mask)
         yield (batch_img, batch_mask)
+
+def get_gens(img_shape, paths, test_paths, batch_size, val_size, crop=False,channelsFirst=False,binary=False,polar=False):
+    paths_idx = np.random.permutation(np.arange(len(paths)))
+    thres = int(len(paths)*(1-val_size))
+    tp, vp = [paths[x] for x in paths_idx[:thres]], [paths[x] for x in paths_idx[thres:]]
+    return fundus_gen(tp, batch_size, (img_shape[0],img_shape[1]), crop=crop,channelsFirst=channelsFirst,binary=binary,polar=polar), fundus_gen(vp, batch_size, (img_shape[0],img_shape[1]), crop=crop,channelsFirst=channelsFirst,binary=binary,polar=polar), fundus_gen(test_paths, batch_size, (img_shape[0],img_shape[1]), crop=crop,channelsFirst=channelsFirst,binary=binary,polar=polar)
 
 def viz(x,y, title=''):
     fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2)

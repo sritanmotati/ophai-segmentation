@@ -748,17 +748,12 @@ class AttNet:
 
     def summary(self):
         self.model.summary()
-
-    def get_gens(self, paths, test_paths, batch_size, val_size):
+    
+    def set_config_params(self, batch_size, total_train, total_val):
         self.config['batch_size'] = batch_size
-        paths_idx = np.random.permutation(np.arange(len(paths)))
-        thres = int(len(paths)*(1-val_size))
-        tp, vp = [paths[x] for x in paths_idx[:thres]], [paths[x]
-                                                         for x in paths_idx[thres:]]
-        self.config['total_train'] = len(tp)
-        self.config['total_val'] = len(vp)
-        return fundus_gen(tp, batch_size, (self.shape[0], self.shape[1])), fundus_gen(vp, batch_size, (self.shape[0], self.shape[1])), fundus_gen(test_paths, batch_size, (self.shape[0], self.shape[1]))
-
+        self.config['total_train'] = total_train
+        self.config['total_val'] = total_val
+    
     def train(self, train_gen, val_gen, train_steps, val_steps):
         gen = DataGenerator(train_gen, val_gen, self.config)
         callbacks = tf.keras.callbacks.EarlyStopping(

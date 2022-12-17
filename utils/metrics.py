@@ -4,6 +4,14 @@ import numpy as np
 def accuracy(y_true, y_pred):
     return np.sum((y_true==y_pred).astype(int)) / y_true.size
 
+# Accuracy for all classes
+def accuracy_multilabel(y_true, y_pred, numLabels):
+    accs = []
+    for index in range(numLabels):
+        ac= accuracy((y_true==index).astype(int), (y_pred==index).astype(int))
+        accs.append(ac)
+    return accs
+
 # One vs. rest dice coefficient
 def dice_coef(y_true, y_pred):
     y_true_f = y_true.flatten()
