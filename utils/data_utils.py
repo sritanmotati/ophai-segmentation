@@ -38,25 +38,25 @@ def crop_disc(img, mask):
 def process_pair(x,y,img_size,crop=False,channelsFirst=False,binary=False,polar=False):
     img = io.imread(x)
     mask = io.imread(y)
-    l,r = 0,img.shape[1]-1
-    threshold = 100
-    while l < img.shape[1] and not any([x[0] > threshold for x in img[:, l]]):
-        l += 1
-    while r >= 0 and not any([x[0] > threshold for x in img[:, r]]):
-        r -= 1
-    t,b = 0,img.shape[0]-1
-    while t < img.shape[0] and not any([x[0] > threshold for x in img[t]]):
-        t += 1
-    while b >= 0 and not any([x[0] > threshold for x in img[b]]):
-        b -= 1
-    img = img[t:b, l:r]
-    mask = mask[t:b, l:r]
-    if crop:
-        img, mask = crop_disc(img, mask)
-    img = Image.fromarray(img).resize(img_size)
-    img = np.asarray(img).astype('float32')
-    mask = Image.fromarray(mask).resize(img_size)
-    mask = np.asarray(mask)
+    # l,r = 0,img.shape[1]-1
+    # threshold = 100
+    # while l < img.shape[1] and not any([x[0] > threshold for x in img[:, l]]):
+    #     l += 1
+    # while r >= 0 and not any([x[0] > threshold for x in img[:, r]]):
+    #     r -= 1
+    # t,b = 0,img.shape[0]-1
+    # while t < img.shape[0] and not any([x[0] > threshold for x in img[t]]):
+    #     t += 1
+    # while b >= 0 and not any([x[0] > threshold for x in img[b]]):
+    #     b -= 1
+    # img = img[t:b, l:r]
+    # mask = mask[t:b, l:r]
+    # if crop:
+    #     img, mask = crop_disc(img, mask)
+    # img = Image.fromarray(img).resize(img_size)
+    # img = np.asarray(img).astype('float32')
+    # mask = Image.fromarray(mask).resize(img_size)
+    # mask = np.asarray(mask)
     mask[mask<100] = 0
     mask[mask>200] = 2
     mask[mask>2] = 1
@@ -75,7 +75,7 @@ def process_pair(x,y,img_size,crop=False,channelsFirst=False,binary=False,polar=
     if channelsFirst:
         img = cf(img)
         mask = cf(mask)
-    return img, mask
+    return img.astype(np.float32), mask.astype(np.float32)
 
 def fundus_gen(paths, batch_size, img_size, crop=False,channelsFirst=False,binary=False,polar=False):
     while True:

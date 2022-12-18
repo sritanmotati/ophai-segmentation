@@ -18,7 +18,7 @@ def dice_coef(y_true, y_pred):
     y_pred_f = y_pred.flatten()
     intersection = np.sum(y_true_f * y_pred_f)
     smooth = 1e-7
-    return (2. * intersection + smooth) / (np.sum(y_true_f) + np.sum(y_pred_f) + smooth)
+    return (2. * intersection) / (np.sum(y_true_f) + np.sum(y_pred_f) + smooth)
 
 # Dice coefficients for all classes
 def dice_coef_multilabel(y_true, y_pred, numLabels):
@@ -34,7 +34,8 @@ def jaccard_coef(y_true, y_pred):
     y_pred_f = y_pred.flatten()
     intersection = np.sum(y_true_f * y_pred_f)
     union = np.sum(y_true_f) + np.sum(y_pred_f) - intersection
-    return intersection / union
+    smooth = 1e-7
+    return intersection / (union + smooth)
 
 # Jaccard score / IoU for all classes
 def jaccard_coef_multilabel(y_true, y_pred, numLabels):
@@ -48,13 +49,14 @@ def jaccard_coef_multilabel(y_true, y_pred, numLabels):
 def tf_stats(y_true, y_pred):
     y_pred = y_pred.flatten()
     y_true = y_true.flatten()
-    TP = ((y_pred == 1) & (y_true == 1)).sum()
-    FP = ((y_pred == 1) & (y_true == 0)).sum()
-    TN = ((y_pred == 0) & (y_true == 0)).sum()
-    FN = ((y_pred == 0) & (y_true == 1)).sum()
-    precision = TP/(TP+FP)
-    recall = TP/(TP+FN)
-    f1 = 2*TP / (2*TP+FP+FN)
+    TP = ((y_pred == 1) & (y_true == 1)).sum() / y_true.shape[0]
+    FP = ((y_pred == 1) & (y_true == 0)).sum() / y_true.shape[0]
+    TN = ((y_pred == 0) & (y_true == 0)).sum() / y_true.shape[0]
+    FN = ((y_pred == 0) & (y_true == 1)).sum() / y_true.shape[0]
+    smooth = 1e-7
+    precision = TP/(TP+FP+smooth)
+    recall = TP/(TP+FN+smooth)
+    f1 = 2*TP / (2*TP+FP+FN+smooth)
     return {'tp':TP, 'fp':FP, 'fn':FN, 'tn':TN, 'precision':precision, 'recall':recall, 'f1':f1}
 
 # Above stats for each class (list of dictionaries)

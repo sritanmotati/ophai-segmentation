@@ -3,6 +3,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.applications import VGG19
 import tensorflow as tf
 from utils.data_utils import *
+from utils.losses import *
 
 def squeeze_excite_block(inputs, ratio=8):
     init = inputs       ## (b, 128, 128, 32)
@@ -145,7 +146,7 @@ class DoubleUnet:
 
     def train(self, train_gen, val_gen, train_steps, val_steps):
         callbacks = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
-        self.model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+        self.model.compile(optimizer='adam', loss=dice_coef_multi_loss if self.n_classes>1 else dice_coef_loss)
         return self.model.fit_generator(train_gen, steps_per_epoch=train_steps, epochs=100, validation_data=val_gen, validation_steps=val_steps, callbacks=callbacks).history
 
     def predict(self, x):
