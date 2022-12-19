@@ -18,13 +18,17 @@ import os
 from PIL import Image
 from utils.data_utils import *
 import pandas as pd
+import os.path as osp
 
 test_path = os.path.join(args.data_dir, args.name_csv_test)
 img_size = (args.img_size, args.img_size)
-df_test = pd.read_csv(test_path).drop(['ind', 'Fovea_X', 'Fovea_Y', 'patientID'], axis=1).values.tolist()
+df_test = pd.read_csv(test_path)[['imageID', 'imageDIR', 'segDIR']].values.tolist()
+
 test_paths = []
 for r in df_test:
-    test_paths.append((os.path.join(args.data_dir, r[1], r[0]), os.path.join(args.data_dir, r[2], r[0].replace('tif', 'png').replace('jpg', 'png'))))
+    img_path = osp.join(osp.split(args.data_dir)[0], r[1], r[0])
+    mask_path = osp.join(osp.split(args.data_dir)[0], r[2], r[0])
+    test_paths.append((img_path, mask_path))
 
 from models.attnet import AttNet
 from models.cenet import CENet

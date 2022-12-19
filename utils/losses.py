@@ -14,7 +14,7 @@ def dice_coef_multi(y_true, y_pred):
     return (score0+score1+score2) / 3.
 
 def dice_coef_loss(y_true, y_pred):
-    return -dice_coef(y_true, y_pred)
+    return 1-dice_coef(y_true, y_pred)
 
 def dice_coef_multi_loss(y_true, y_pred):
-    return -dice_coef_multi(y_true, y_pred)
+    return 1-dice_coef_multi(y_true, y_pred)

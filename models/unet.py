@@ -69,7 +69,7 @@ class Unet:
         self.model.save(path)
 
     def load(self, path):
-        self.model = tf.keras.models.load_model(path)
+        self.model = tf.keras.models.load_model(path, compile=False)
 
     def get_model(self):
         return self.model

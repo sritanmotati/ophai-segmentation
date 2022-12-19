@@ -82,3 +82,9 @@ plt.xlabel('Epoch')
 plt.legend(['Train', 'Validation'], loc='upper left')
 # plt.show()
 plt.savefig(f'{args.model_name}_loss.png')
+
+out_write = open('losses.csv', 'w')
+out_write.write('epoch,loss,val_loss')
+for i in range(len(history['loss'])):
+    n = out_write.write(f"{i},{history['loss'][i]},{history['val_loss'][i]}")
+out_write.close()
