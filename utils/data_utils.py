@@ -64,7 +64,7 @@ def process_pair(x,y,img_size,crop=False,channelsFirst=False,binary=False,polar=
         mask[mask>=1] = 1
     if polar:
         SHAPE = img_size[0]
-        img = rotate(cv2.linearPolar(img, (SHAPE / 2, SHAPE / 2), SHAPE / 2, cv2.INTER_NEAREST + cv2.WARP_FILL_OUTLIERS), -90)
+        img = rotate(cv2.linearPolar(img, (SHAPE / 2, SHAPE / 2), SHAPE / 2, cv2.INTER_NEAREST + cv2.WARP_FILL_OUTLIERS), -90)*255.
         mask = rotate(cv2.linearPolar(mask, (SHAPE / 2, SHAPE / 2), SHAPE / 2, cv2.INTER_NEAREST + cv2.WARP_FILL_OUTLIERS), -90)
         mask = (mask - np.min(mask)) / (np.max(mask) - np.min(mask))
         mask = mask * 2.

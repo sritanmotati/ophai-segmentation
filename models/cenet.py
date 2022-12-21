@@ -122,9 +122,9 @@ class DecoderBlock(nn.Module):
         return x
 
 
-class CENet(nn.Module):
-    def __init__(self, num_classes=1, num_channels=3):
-        super(CENet, self).__init__()
+class CENetModel(nn.Module):
+    def __init__(self, num_classes):
+        super(CENetModel, self).__init__()
 
         filters = [64, 128, 256, 512]
         resnet = models.resnet34(pretrained=True)
@@ -182,8 +182,8 @@ class CENet(nn.Module):
         # return out
 
 class MyFrame():
-    def __init__(self, net, loss, lr=2e-4, evalmode=False):
-        self.net = net().cuda()
+    def __init__(self, net, loss, n_classes, lr=2e-4, evalmode=False):
+        self.net = net(n_classes).cuda()
         self.net = torch.nn.DataParallel(self.net, device_ids=range(torch.cuda.device_count()))
         self.optimizer = torch.optim.Adam(params=self.net.parameters(), lr=lr)
         # self.optimizer = torch.optim.SGD(params=self.net.parameters(), lr=lr)
@@ -266,7 +266,7 @@ class CENet:
     def __init__(self, shape, n_classes):
         self.shape = shape
         self.n_classes = n_classes
-        self.model = MyFrame(CENet, DiceLoss, 2e-4)
+        self.model = MyFrame(CENetModel, DiceLoss, n_classes, 2e-4)
 
     def summary(self):
         print("TBD")
@@ -307,9 +307,6 @@ class CENet:
                 no_optim = 0
                 train_epoch_best_loss = train_epoch_loss
                 self.model.save('cenet-saved.pth')
-            if no_optim > NUM_EARLY_STOP:
-                print('early stop at %d epoch' % epoch)
-                break
             if no_optim > NUM_UPDATE_LR:
                 if self.model.old_lr < 5e-7:
                     break
@@ -329,6 +326,10 @@ class CENet:
             print('val_loss:', val_epoch_loss.item())
             val_losses.append(val_epoch_loss.item())
             eval_pred(gt0[0], pred0[0])
+
+            if no_optim > NUM_EARLY_STOP:
+                print('early stop at %d epoch' % epoch)
+                break
         
         return {'loss': train_losses, 'val_loss': val_losses}
 
