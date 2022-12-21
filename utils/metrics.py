@@ -49,10 +49,10 @@ def jaccard_coef_multilabel(y_true, y_pred, numLabels):
 def tf_stats(y_true, y_pred):
     y_pred = y_pred.flatten()
     y_true = y_true.flatten()
-    TP = ((y_pred == 1) & (y_true == 1)).sum() / y_true.shape[0]
-    FP = ((y_pred == 1) & (y_true == 0)).sum() / y_true.shape[0]
-    TN = ((y_pred == 0) & (y_true == 0)).sum() / y_true.shape[0]
-    FN = ((y_pred == 0) & (y_true == 1)).sum() / y_true.shape[0]
+    TP = ((y_pred == 1) & (y_true == 1)).sum() / (y_true==1).sum()
+    FP = ((y_pred == 1) & (y_true == 0)).sum() / (y_true==0).sum()
+    TN = ((y_pred == 0) & (y_true == 0)).sum() / (y_true==0).sum()
+    FN = ((y_pred == 0) & (y_true == 1)).sum() / (y_true==1).sum()
     smooth = 1e-7
     precision = TP/(TP+FP+smooth)
     recall = TP/(TP+FN+smooth)

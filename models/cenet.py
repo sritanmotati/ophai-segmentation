@@ -319,13 +319,13 @@ class CENet:
                 img, gt = torch.from_numpy(img).float(), torch.from_numpy(gt).float()
                 pred_y, val_loss_batch = self.model.eval_batch(img, gt)
                 if i == 0:
-                    pred0 = pred_y.cpu().data.numpy()[0]
-                    gt0 = gt.cpu().data.numpy()[0]
+                    pred0 = np.moveaxis(pred_y.cpu().data.numpy()[0], 0, -1)
+                    gt0 = np.moveaxis(gt.cpu().data.numpy()[0], 0, -1)
                 val_loss += val_loss_batch
             val_epoch_loss = val_loss/val_steps
             print('val_loss:', val_epoch_loss.item())
             val_losses.append(val_epoch_loss.item())
-            eval_pred(gt0[0], pred0[0])
+            eval_pred(np.argmax(gt0, axis=-1), np.argmax(pred0, axis=-1))
 
             if no_optim > NUM_EARLY_STOP:
                 print('early stop at %d epoch' % epoch)
