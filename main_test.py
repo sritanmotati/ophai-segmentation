@@ -19,6 +19,7 @@ from PIL import Image
 from utils.data_utils import *
 import pandas as pd
 import os.path as osp
+from tqdm import tqdm
 
 test_path = os.path.join(args.data_dir, args.name_csv_test)
 img_size = (args.img_size, args.img_size)
@@ -26,8 +27,8 @@ df_test = pd.read_csv(test_path)[['imageID', 'imageDIR', 'segDIR']].values.tolis
 
 test_paths = []
 for r in df_test:
-    img_path = osp.join(osp.split(args.data_dir)[0], r[1], r[0])
-    mask_path = osp.join(osp.split(args.data_dir)[0], r[2], r[0])
+    img_path = osp.join(osp.split(args.data_dir)[0], r[1], r[0]).replace('\\', '/')
+    mask_path = osp.join(osp.split(args.data_dir)[0], r[2], r[0]).replace('\\', '/')
     test_paths.append((img_path, mask_path))
 
 from models.attnet import AttNet
@@ -45,9 +46,8 @@ from utils.data_utils import *
 
 sp = args.path_save_results
 if not os.path.isdir(sp): os.makedirs(sp)
-os.chdir(sp)
 
-if not os.path.isdir('preds'): os.makedirs('preds')
+if args.save_masks and not os.path.isdir(osp.join(sp,'preds')): os.makedirs(osp.join(sp,'preds'))
 
 img_size = (args.img_size, args.img_size)
 model = {
@@ -61,7 +61,7 @@ model = {
     'resunet': ResUnet,
     'unet': Unet,
     'unetpp': UnetPlusPlus
-}[args.model_name]((img_size[0],img_size[1],3), 1 if args.binary else 3) # only important for unet models, SOTA models have their own size/n_channels and this will be disregarded
+}[args.model_name]((img_size[0],img_size[1],3), 2 if args.binary else 3) # only important for unet models, SOTA models have their own size/n_channels and this will be disregarded
 
 torch_models = ['cenet']
 polar_models = ['mnet']
@@ -72,23 +72,24 @@ model.load(args.path_model)
 
 class_stats = [{'acc':0, 'dice':0, 'jacc':0, 'tp':0, 'fp':0, 'fn':0, 'tn':0, 'precision':0, 'recall':0, 'f1':0} for i in range(3)]; acc = 0
 
-for i in range(len(test_paths)):
+for i in tqdm(range(len(test_paths))):
   x, y = next(test_gen)
   pred = model.predict(x)[0]
   y = y[0]
   if args.model_name in torch_models:
     pred = np.moveaxis(pred, 0, -1)
     y = np.moveaxis(y, 0, -1)
-  im_pred = np.argmax(pred, axis=2) if pred.shape[-1] > 1 else pred.reshape(pred.shape[:-1])
+  im_pred = np.argmax(pred, axis=2)
   if args.save_masks:
     im = Image.fromarray((im_pred * 255).astype(np.uint8))
     im_name = f'pred_{i}.jpg'
-    im.save(os.path.join('preds', im_name))
-  gt = y
-  acc = accuracy_multilabel(gt, pred, y.shape[-1])
-  dice = dice_coef_multilabel(gt, pred, y.shape[-1])
-  jacc = jaccard_coef_multilabel(gt, pred, y.shape[-1])
-  tfstats = tf_stats_multiclass(gt, pred, y.shape[-1])
+    im.save(os.path.join(sp,'preds', im_name))
+  gt = np.argmax(y, axis=-1)
+  n_classes=y.shape[-1]
+  acc = accuracy_multilabel(gt, im_pred, n_classes)
+  dice = dice_coef_multilabel(gt, im_pred, n_classes)
+  jacc = jaccard_coef_multilabel(gt, im_pred, n_classes)
+  tfstats = tf_stats_multiclass(gt, im_pred, n_classes)
   for c in range(y.shape[-1]):
     class_stats[c]['acc'] += acc[c]
     class_stats[c]['dice'] += dice[c]
@@ -116,6 +117,6 @@ for c in range(y.shape[-1]):
     output += f"{class_stats[c]['recall']},"
     output += f"{class_stats[c]['f1']}\n"
 
-out_write = open('results.csv', 'w')
+out_write = open(osp.join(sp,'results.csv'), 'w')
 n = out_write.write(output)
 out_write.close()

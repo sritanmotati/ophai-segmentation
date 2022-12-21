@@ -2,15 +2,9 @@ import keras
 import tensorflow as tf
 from keras.models import Model
 from keras import backend as K
-from keras.layers import Input, merge, Conv2D, ZeroPadding2D, UpSampling2D, Dense, concatenate, Conv2DTranspose
-from keras.layers.pooling import MaxPooling2D, GlobalAveragePooling2D, MaxPooling2D
-from keras.layers.core import Dense, Dropout, Activation
-from keras.layers import BatchNormalization, Dropout, Flatten, Lambda
-from keras.layers.advanced_activations import ELU, LeakyReLU
+from keras.layers import *
 from keras.optimizers import Adam, RMSprop, SGD
 from keras.regularizers import l2
-from keras.layers.noise import GaussianDropout
-from utils.data_utils import *
 from utils.losses import *
 
 import numpy as np
@@ -287,11 +281,11 @@ class UnetPlusPlus:
 
     def train(self, train_gen, val_gen, train_steps, val_steps):
         callbacks = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
-        self.model.compile(optimizer='adam', loss=dice_coef_multi_loss if self.n_classes>1 else dice_coef_loss)
+        self.model.compile(optimizer='adam', loss=dice_coef_multi_loss)
         return self.model.fit_generator(train_gen, steps_per_epoch=train_steps, epochs=100, validation_data=val_gen, validation_steps=val_steps, callbacks=callbacks).history
 
     def predict(self, x):
-        return self.model.predict(x)
+        return self.model.predict(x, verbose=0)
 
     def save(self, path):
         self.model.save(path)

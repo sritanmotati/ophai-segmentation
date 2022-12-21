@@ -107,7 +107,7 @@ class MNet:
         return self.model.fit_generator(train_gen, steps_per_epoch=train_steps, epochs=100, validation_data=val_gen, validation_steps=val_steps, callbacks=callbacks).history
 
     def predict(self, x):
-        return self.model.predict(x)
+        return self.model.predict(x, verbose=0)
 
     def save(self, path):
         self.model.save(path)

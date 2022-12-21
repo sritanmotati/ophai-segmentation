@@ -38,8 +38,8 @@ df_train = pd.read_csv(train_path)[['imageID', 'imageDIR', 'segDIR']].values.tol
 
 train_paths = []
 for r in df_train:
-    img_path = osp.join(osp.split(dataset_dir)[0], r[1], r[0])
-    mask_path = osp.join(osp.split(dataset_dir)[0], r[2], r[0])
+    img_path = osp.join(osp.split(dataset_dir)[0], r[1], r[0]).replace('\\', '/')
+    mask_path = osp.join(osp.split(dataset_dir)[0], r[2], r[0]).replace('\\', '/')
     train_paths.append((img_path, mask_path))
 
 model = {
@@ -53,7 +53,7 @@ model = {
     'resunet': ResUnet,
     'unet': Unet,
     'unetpp': UnetPlusPlus
-}[args.model_name]((img_size[0],img_size[1],3), 1 if args.binary else 3) # only important for unet models, SOTA models have their own size/n_channels and this will be disregarded
+}[args.model_name]((img_size[0],img_size[1],3), 2 if args.binary else 3) # only important for unet models, SOTA models have their own size/n_channels and this will be disregarded
 
 torch_models = ['cenet']
 polar_models = ['mnet']
@@ -71,8 +71,7 @@ history = model.train(train_gen, val_gen, train_len//args.batch_size, val_len//a
 
 sp = args.path_save
 if not os.path.isdir(sp): os.makedirs(sp)
-os.chdir(sp)
-model.save(f'{args.model_name}_model' + ['.h5', '.pth'][args.model_name in torch_models])
+model.save(osp.join(sp,f'{args.model_name}_model' + ['.h5', '.pth'][args.model_name in torch_models]))
 
 plt.plot(history['loss'])
 plt.plot(history['val_loss'])
@@ -81,9 +80,9 @@ plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend(['Train', 'Validation'], loc='upper left')
 # plt.show()
-plt.savefig(f'{args.model_name}_loss.png')
+plt.savefig(osp.join(sp,f'{args.model_name}_loss.png'))
 
-out_write = open('losses.csv', 'w')
+out_write = open(osp.join(sp,'losses.csv'), 'w')
 out_write.write('epoch,loss,val_loss')
 for i in range(len(history['loss'])):
     n = out_write.write(f"{i},{history['loss'][i]},{history['val_loss'][i]}")

@@ -86,11 +86,11 @@ class ResUnet:
     
     def train(self, train_gen, val_gen, train_steps, val_steps):
         callbacks = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
-        self.model.compile(optimizer='adam', loss=dice_coef_multi_loss if self.n_classes>1 else dice_coef_loss)
+        self.model.compile(optimizer='adam', loss=dice_coef_multi_loss)
         return self.model.fit_generator(train_gen, steps_per_epoch=train_steps, epochs=100, validation_data=val_gen, validation_steps=val_steps, callbacks=callbacks).history
 
     def predict(self, x):
-        return self.model.predict(x)
+        return self.model.predict(x, verbose=0)
 
     def save(self, path):
         self.model.save(path)

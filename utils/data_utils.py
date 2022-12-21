@@ -62,9 +62,6 @@ def process_pair(x,y,img_size,crop=False,channelsFirst=False,binary=False,polar=
     mask[mask>2] = 1
     if binary:
         mask[mask>=1] = 1
-        mask = np.expand_dims(mask, axis=-1)
-    else:
-        mask = tf.keras.utils.to_categorical(mask).astype('float32')
     if polar:
         SHAPE = img_size[0]
         img = rotate(cv2.linearPolar(img, (SHAPE / 2, SHAPE / 2), SHAPE / 2, cv2.INTER_NEAREST + cv2.WARP_FILL_OUTLIERS), -90)
@@ -72,6 +69,8 @@ def process_pair(x,y,img_size,crop=False,channelsFirst=False,binary=False,polar=
         mask = (mask - np.min(mask)) / (np.max(mask) - np.min(mask))
         mask = mask * 2.
         mask = np.rint(mask)
+    
+    mask = tf.keras.utils.to_categorical(mask).astype('float32')
     if channelsFirst:
         img = cf(img)
         mask = cf(mask)
