@@ -211,7 +211,7 @@ class MyFrame():
     def test_batch(self, X):
         # self.forward(volatile=True)
         with torch.no_grad():
-            pred=self.net(X)
+            pred=self.net(torch.from_numpy(X))
             return pred.cpu().data.numpy()
     
     def eval_batch(self, X, y):
