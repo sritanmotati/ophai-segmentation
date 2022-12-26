@@ -79,6 +79,21 @@ for i in tqdm(range(len(test_paths))):
   if args.model_name in torch_models:
     pred = np.moveaxis(pred, 0, -1)
     y = np.moveaxis(y, 0, -1)
+  if args.model_name in polar_models:
+    DiscROI_size = pred.shape[0]
+    disc_map = np.array(Image.fromarray(pred[:, :, 1]).resize((DiscROI_size, DiscROI_size)))
+    cup_map = np.array(Image.fromarray(pred[:, :, 2]).resize((DiscROI_size, DiscROI_size)))
+    disc_map[-round(DiscROI_size / 3):, :] = 0
+    cup_map[-round(DiscROI_size / 2):, :] = 0
+    De_disc_map = cv2.linearPolar(rotate(disc_map, 90), (DiscROI_size / 2, DiscROI_size / 2),
+                                  DiscROI_size / 2, cv2.WARP_FILL_OUTLIERS + cv2.WARP_INVERSE_MAP)
+    De_cup_map = cv2.linearPolar(rotate(cup_map, 90), (DiscROI_size / 2, DiscROI_size / 2),
+                                 DiscROI_size / 2, cv2.WARP_FILL_OUTLIERS + cv2.WARP_INVERSE_MAP)
+
+    De_disc_map = np.array(BW_img(De_disc_map, 0.5), dtype=int)
+    De_cup_map = np.array(BW_img(De_cup_map, 0.5), dtype=int)
+    ROI_result = np.array(BW_img(De_disc_map, 0.5), dtype=int) + np.array(BW_img(De_cup_map, 0.5), dtype=int)
+    print(ROI_result.shape)
   im_pred = np.argmax(pred, axis=2)
   if args.save_masks:
     im = Image.fromarray((im_pred * 255).astype(np.uint8))

@@ -8,6 +8,7 @@ from tensorflow.keras import backend as K
 import tensorflow as tf
 from tensorflow.keras import backend as K
 from utils.data_utils import *
+from utils.losses import *
 
 def DeepModel(size_set, n_classes):
     img_input = Input(shape=(size_set, size_set, 3))
@@ -73,23 +74,7 @@ def DeepModel(size_set, n_classes):
 
     out10 = average([out6, out7, out8, out9])
 
-    return Model(inputs=[img_input], outputs=[out6, out7, out8, out9, out10])
-
-def dice_coef(y_true, y_pred):
-    smooth = 1.
-    y_true_f = K.flatten(y_true)
-    y_pred_f = K.flatten(y_pred)
-    intersection = K.sum(y_true_f * y_pred_f)
-    return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
-
-def dice_coef2(y_true, y_pred):
-    score0 = dice_coef(y_true[:, :, :, 0], y_pred[:, :, :, 0])
-    score1 = dice_coef(y_true[:, :, :, 1], y_pred[:, :, :, 1])
-    score2 = dice_coef(y_true[:, :, :, 2], y_pred[:, :, :, 2])
-    return (score0+score1+score2) / 3.
-
-def dice_coef_loss(y_true, y_pred):
-    return -dice_coef2(y_true, y_pred)
+    return Model(inputs=img_input, outputs=out10)
 
 
 class MNet:
@@ -103,7 +88,7 @@ class MNet:
 
     def train(self, train_gen, val_gen, train_steps, val_steps):
         callbacks = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
-        self.model.compile(optimizer=tf.keras.optimizers.SGD(lr=0.0001, momentum=0.9), loss=dice_coef_loss, loss_weights=[0.1, 0.1, 0.1, 0.1, 0.6])
+        self.model.compile(optimizer='adam', loss=dice_coef_multi_loss)
         return self.model.fit_generator(train_gen, steps_per_epoch=train_steps, epochs=100, validation_data=val_gen, validation_steps=val_steps, callbacks=callbacks).history
 
     def predict(self, x):

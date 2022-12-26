@@ -17,16 +17,18 @@ class DiceLoss(nn.Module):
     def forward(self, input, target):
         N, H, W = target.size(0), target.size(2), target.size(3)
         smooth = 1
+        
+        dice=0
+        for i in range(target.size(1)):
+            input_flat = input[:,i,:,:].view(-1)
+            target_flat = target[:,i,:,:].view(-1)
 
-        input_flat = input.view(N, -1)
-        target_flat = target.view(N, -1)
+            intersection = input_flat * target_flat
 
-        intersection = input_flat * target_flat
+            loss = 2 * (intersection.sum() + smooth) / (input_flat.sum() + target_flat.sum() + smooth)
+            dice += loss.sum()/N
 
-        loss = 2 * (intersection.sum(1) + smooth) / (input_flat.sum(1) + target_flat.sum(1) + smooth)
-        loss = 1 - loss.sum() / N
-
-        return loss
+        return 1-(dice/target.size(1))
 
 nonlinearity = partial(F.relu, inplace=True)
 

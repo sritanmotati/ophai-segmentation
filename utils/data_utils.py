@@ -8,6 +8,8 @@ from skimage.measure import label, regionprops
 from skimage.transform import rotate, resize
 from tensorflow.keras.preprocessing import image
 import cv2
+from scipy.ndimage import binary_fill_holes
+from tensorflow.keras import backend as K
 
 def cf(img):
     return np.moveaxis(img, -1, 0)
@@ -74,7 +76,9 @@ def process_pair(x,y,img_size,crop=False,channelsFirst=False,binary=False,polar=
     if channelsFirst:
         img = cf(img)
         mask = cf(mask)
-    return img.astype(np.float32), mask.astype(np.float32)
+    mask = mask.astype(np.float32)
+    img = img.astype(np.float32)/255.
+    return img, mask
 
 def fundus_gen(paths, batch_size, img_size, crop=False,channelsFirst=False,binary=False,polar=False):
     while True:
@@ -85,7 +89,7 @@ def fundus_gen(paths, batch_size, img_size, crop=False,channelsFirst=False,binar
             img, mask = process_pair(img_path, mask_path, img_size, crop=crop,channelsFirst=channelsFirst,binary=binary,polar=polar)
             batch_img.append(img)
             batch_mask.append(mask)
-        batch_img = np.array(batch_img) / 255.
+        batch_img = np.array(batch_img)
         batch_mask = np.array(batch_mask)
         yield (batch_img, batch_mask)
 
@@ -108,3 +112,17 @@ def eval_pred(y_true, y_pred):
     a2.imshow(y_pred)
     a2.set_title('Predicted mask')
     plt.show()
+
+def BW_img(input, thresholding):
+    if input.max() > thresholding:
+        binary = input > thresholding
+    else:
+        binary = input > input.max() / 2.0
+
+    label_image = label(binary)
+    regions = regionprops(label_image)
+    area_list = [region.area for region in regions]
+    if area_list:
+        idx_max = np.argmax(area_list)
+        binary[label_image != idx_max + 1] = 0
+    return binary_fill_holes(np.asarray(binary).astype(int))
