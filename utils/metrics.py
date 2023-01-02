@@ -49,15 +49,21 @@ def jaccard_coef_multilabel(y_true, y_pred, numLabels):
 def tf_stats(y_true, y_pred):
     y_pred = y_pred.flatten()
     y_true = y_true.flatten()
-    TP = ((y_pred == 1) & (y_true == 1)).sum() / (y_true==1).sum()
-    FP = ((y_pred == 1) & (y_true == 0)).sum() / (y_true==0).sum()
-    TN = ((y_pred == 0) & (y_true == 0)).sum() / (y_true==0).sum()
-    FN = ((y_pred == 0) & (y_true == 1)).sum() / (y_true==1).sum()
+    TP = ((y_pred == 1) & (y_true == 1)).sum() 
+    FP = ((y_pred == 1) & (y_true == 0)).sum() 
+    TN = ((y_pred == 0) & (y_true == 0)).sum() 
+    FN = ((y_pred == 0) & (y_true == 1)).sum() 
+
+    TPR = TP / (y_true == 1).sum()
+    FPR = FP / (y_true == 0).sum()
+    TNR = TN / (y_true == 0).sum()
+    FNR = FN / (y_true == 1).sum()
+    
     smooth = 1e-7
     precision = TP/(TP+FP+smooth)
     recall = TP/(TP+FN+smooth)
     f1 = 2*TP / (2*TP+FP+FN+smooth)
-    return {'tp':TP, 'fp':FP, 'fn':FN, 'tn':TN, 'precision':precision, 'recall':recall, 'f1':f1}
+    return {'tpr':TPR, 'fpr':FPR, 'fnr':FNR, 'tnr':TNR, 'precision':precision, 'recall':recall, 'f1':f1}
 
 # Above stats for each class (list of dictionaries)
 def tf_stats_multiclass(y_true, y_pred, numLabels):

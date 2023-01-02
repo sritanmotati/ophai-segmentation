@@ -15,20 +15,35 @@ class DiceLoss(nn.Module):
         super(DiceLoss, self).__init__()
 
     def forward(self, input, target):
-        N, H, W = target.size(0), target.size(2), target.size(3)
+        # N, H, W = target.size(0), target.size(2), target.size(3)
+        N = target.size(0)
         smooth = 1
-        
-        dice=0
-        for i in range(target.size(1)):
-            input_flat = input[:,i,:,:].view(-1)
-            target_flat = target[:,i,:,:].view(-1)
 
-            intersection = input_flat * target_flat
+        input_flat = input.view(N, -1)
+        target_flat = target.view(N, -1)
 
-            loss = 2 * (intersection.sum() + smooth) / (input_flat.sum() + target_flat.sum() + smooth)
-            dice += loss.sum()/N
+        intersection = input_flat * target_flat
 
-        return 1-(dice/target.size(1))
+        loss = 2 * (intersection.sum(1) + smooth) / (input_flat.sum(1) + target_flat.sum(1) + smooth)
+        loss = 1 - loss.sum() / N
+
+        return loss
+
+class MulticlassDiceLoss(nn.Module):
+    def __init__(self, num_classes):
+        super(MulticlassDiceLoss, self).__init__()
+        self.num_classes = num_classes
+
+    def forward(self, input, target, weights=[1,1,1]):
+        C=target.shape[1]
+        dice=DiceLoss()
+        totalLoss=0
+        for i in range(C):
+            diceLoss = dice(input[:,i,:,:], target[:,i,:,:])
+            if weights is not None:
+                diceLoss *= weights[i]
+            totalLoss += diceLoss
+        return totalLoss
 
 nonlinearity = partial(F.relu, inplace=True)
 
@@ -180,7 +195,7 @@ class CENetModel(nn.Module):
         out = self.finalrelu2(out)
         out = self.finalconv3(out)
 
-        return F.sigmoid(out)
+        return F.softmax(out)
         # return out
 
 class MyFrame():
@@ -189,7 +204,7 @@ class MyFrame():
         self.net = torch.nn.DataParallel(self.net, device_ids=range(torch.cuda.device_count()))
         self.optimizer = torch.optim.Adam(params=self.net.parameters(), lr=lr)
         # self.optimizer = torch.optim.SGD(params=self.net.parameters(), lr=lr)
-        self.loss = loss()
+        self.loss = loss(n_classes)
         self.old_lr = lr
         if evalmode:
             for i in self.net.modules():
@@ -267,7 +282,7 @@ class CENet:
     def __init__(self, shape, n_classes):
         self.shape = shape
         self.n_classes = n_classes
-        self.model = MyFrame(CENetModel, DiceLoss, n_classes, 2e-4)
+        self.model = MyFrame(CENetModel, MulticlassDiceLoss, n_classes, 2e-4)
 
     def summary(self):
         print("TBD")
@@ -280,7 +295,7 @@ class CENet:
         no_optim = 0
         NUM_EARLY_STOP = 10
         NUM_UPDATE_LR = 10
-        num_epochs = 300
+        num_epochs = 100
 
         for epoch in range(num_epochs):
             print('********')
@@ -326,7 +341,7 @@ class CENet:
             val_epoch_loss = val_loss/val_steps
             print('val_loss:', val_epoch_loss.item())
             val_losses.append(val_epoch_loss.item())
-            eval_pred(np.argmax(gt0, axis=-1), np.argmax(pred0, axis=-1))
+            eval_pred(np.argmax(gt0, axis=-1), np.argmax(pred0, axis=-1) if pred0.shape[-1] != 3 else pred0)
 
             if no_optim > NUM_EARLY_STOP:
                 print('early stop at %d epoch' % epoch)

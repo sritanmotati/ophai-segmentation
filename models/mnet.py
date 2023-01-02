@@ -67,10 +67,10 @@ def DeepModel(size_set, n_classes):
     side6 = UpSampling2D(size=(8, 8))(conv6)
     side7 = UpSampling2D(size=(4, 4))(conv7)
     side8 = UpSampling2D(size=(2, 2))(conv8)
-    out6 = Conv2D(n_classes, (1, 1), activation='sigmoid', name='side_63')(side6)
-    out7 = Conv2D(n_classes, (1, 1), activation='sigmoid', name='side_73')(side7)
-    out8 = Conv2D(n_classes, (1, 1), activation='sigmoid', name='side_83')(side8)
-    out9 = Conv2D(n_classes, (1, 1), activation='sigmoid', name='side_93')(conv9)
+    out6 = Conv2D(n_classes, (1, 1), activation='softmax', name='side_63')(side6)
+    out7 = Conv2D(n_classes, (1, 1), activation='softmax', name='side_73')(side7)
+    out8 = Conv2D(n_classes, (1, 1), activation='softmax', name='side_83')(side8)
+    out9 = Conv2D(n_classes, (1, 1), activation='softmax', name='side_93')(conv9)
 
     out10 = average([out6, out7, out8, out9])
 

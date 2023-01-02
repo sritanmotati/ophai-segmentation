@@ -83,7 +83,7 @@ plt.legend(['Train', 'Validation'], loc='upper left')
 plt.savefig(osp.join(sp,f'{args.model_name}_loss.png'))
 
 out_write = open(osp.join(sp,'losses.csv'), 'w')
-out_write.write('epoch,loss,val_loss')
+out_write.write('epoch,loss,val_loss\n')
 for i in range(len(history['loss'])):
-    n = out_write.write(f"{i},{history['loss'][i]},{history['val_loss'][i]}")
+    n = out_write.write(f"{i},{history['loss'][i]},{history['val_loss'][i]}\n")
 out_write.close()
