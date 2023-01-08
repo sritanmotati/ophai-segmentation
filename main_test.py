@@ -1,6 +1,6 @@
 import argparse
 
-parser = argparse.ArgumentParser(description='Test model (Keras).')
+parser = argparse.ArgumentParser(description='Test model.')
 parser.add_argument('--model-name', help='Name of model to train.', choices=['attnet', 'cenet', 'deeplabv3plus', 'doubleunet', 'mnet', 'mobilenet_unet', 'resnet_unet', 'resunet', 'unet', 'unetpp'])
 parser.add_argument('--name-csv-test', help='Name of the CSV file with testing dataset information.', required=True)
 parser.add_argument('--data-dir', help='Path to the folder with the CSV files and image subfolders.', required=True)
