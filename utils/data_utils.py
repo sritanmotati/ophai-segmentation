@@ -81,11 +81,8 @@ def process_pair(x,y,img_size,crop=False,channelsFirst=False,binary=False,polar=
     return img, mask
 
 def fundus_gen(paths, batch_size, img_size, crop=False,channelsFirst=False,binary=False,polar=False):
-    indices = np.arange(len(paths))
-    np.random.shuffle(indices)
-    for start in range(0, len(paths), batch_size):
-        end = min(start + batch_size, len(paths))
-        batch_paths = [paths[i] for i in indices[start:end]]
+    while True:
+        batch_paths = [paths[i] for i in np.random.choice(a=np.arange(len(paths)), size=batch_size)]
         batch_img = []
         batch_mask = []
         for img_path, mask_path in batch_paths:

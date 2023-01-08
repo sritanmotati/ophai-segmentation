@@ -200,7 +200,8 @@ class CENetModel(nn.Module):
 
 class MyFrame():
     def __init__(self, net, loss, n_classes, lr=2e-4, evalmode=False):
-        self.net = net(n_classes).cuda()
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.net = net(n_classes).to(self.device)
         self.net = torch.nn.DataParallel(self.net, device_ids=range(torch.cuda.device_count()))
         self.optimizer = torch.optim.Adam(params=self.net.parameters(), lr=lr)
         # self.optimizer = torch.optim.SGD(params=self.net.parameters(), lr=lr)
@@ -241,7 +242,7 @@ class MyFrame():
     def test_one_img_from_path(self, path):
         img = cv2.imread(path)
         img = np.array(img, np.float32)/255.0 * 3.2 - 1.6
-        img = V(torch.Tensor(img).cuda())
+        img = V(torch.Tensor(img).to(self.device))
         
         mask = self.net.forward(img).squeeze().cpu().data.numpy()#.squeeze(1)
         mask[mask>0.5] = 1
@@ -250,9 +251,9 @@ class MyFrame():
         return mask
         
     def forward(self, volatile=False):
-        self.img = V(self.img.cuda(), volatile=volatile)
+        self.img = V(self.img.to(self.device), volatile=volatile)
         if self.mask is not None:
-            self.mask = V(self.mask.cuda(), volatile=volatile)
+            self.mask = V(self.mask.to(self.device), volatile=volatile)
         
     def optimize(self):
         self.forward()
@@ -266,8 +267,11 @@ class MyFrame():
     def save(self, path):
         torch.save(self.net.state_dict(), path)
         
-    def load(self, path):
-        self.net.load_state_dict(torch.load(path))
+    def load(self, path, cpu=False):
+        if cpu:
+            self.net.load_state_dict(torch.load(path, map_location=torch.device('cpu')))
+        else:
+            self.net.load_state_dict(torch.load(path))
     
     def update_lr(self, new_lr, factor=False):
         if factor:
@@ -355,8 +359,8 @@ class CENet:
     def save(self, path):
         self.model.save(path)
 
-    def load(self, path):
-        self.model.load(path)
+    def load(self, path, cpu=False):
+        self.model.load(path, cpu=cpu)
 
     def get_model(self):
         return self.model
