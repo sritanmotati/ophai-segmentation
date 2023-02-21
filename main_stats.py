@@ -1,15 +1,4 @@
-import pandas
-import numpy as np
-
-import os
-import pickle
-
-from scipy import stats
-import scipy.stats as st
 import pandas as pd
-import math
-from tqdm import tqdm
-
 
 df_summary = pd.read_csv('csv_results_summary.csv', low_memory=False)
 df_summary = df_summary.drop(columns=['severity', 'perturb_type'])

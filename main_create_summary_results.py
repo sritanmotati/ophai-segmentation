@@ -5,16 +5,7 @@ Created on Sun Jan  1 23:33:56 2023
 @author: Moha-Cate
 """
 
-import pandas
-import numpy as np
-
-import os
-import pickle
-
-import matplotlib.pyplot as plt
 import seaborn as sns
-from scipy import stats
-import scipy.stats as st
 import pandas as pd
 from tqdm import tqdm
 

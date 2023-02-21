@@ -1,7 +1,7 @@
 import argparse
 
 parser = argparse.ArgumentParser(description='Train model.')
-parser.add_argument('--model-name', help='Name of model to train.', choices=['attnet', 'cenet', 'deeplabv3plus', 'doubleunet', 'mnet', 'mobilenet_unet', 'resnet_unet', 'resunet', 'unet', 'unetpp'], required=True)
+parser.add_argument('--model-name', help='Name of model to train.', choices=['cenet', 'deeplabv3plus', 'unetpp'], required=True)
 parser.add_argument('--name-csv-train', help='Name of the CSV file with training dataset information.', required=True)
 parser.add_argument('--data-dir', help='Path to the folder with the CSV files and image subfolders.', required=True)
 parser.add_argument('--path-save', help='Path to the folder where model will be saved.', required=True)
@@ -16,15 +16,8 @@ import os.path as osp
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from models.attnet import AttNet
 from models.cenet import CENet
 from models.deeplabv3plus import DeepLabV3Plus
-from models.doubleunet import DoubleUnet
-from models.mnet import MNet
-from models.mobilenet_unet import MobileNetUnet
-from models.resnet_unet import ResNetUnet
-from models.resunet import ResUnet
-from models.unet import Unet
 from models.unetpp import UnetPlusPlus
 
 from utils.data_utils import *
@@ -43,15 +36,8 @@ for r in df_train:
     train_paths.append((img_path, mask_path))
 
 model = {
-    'attnet': AttNet,
     'cenet': CENet,
     'deeplabv3plus': DeepLabV3Plus,
-    'doubleunet': DoubleUnet,
-    'mnet': MNet,
-    'mobilenet_unet': MobileNetUnet,
-    'resnet_unet': ResNetUnet,
-    'resunet': ResUnet,
-    'unet': Unet,
     'unetpp': UnetPlusPlus
 }[args.model_name]((img_size[0],img_size[1],3), 2 if args.binary else 3) # only important for unet models, SOTA models have their own size/n_channels and this will be disregarded
 

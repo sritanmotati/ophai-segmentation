@@ -5,18 +5,13 @@ Created on Sun Jan  1 23:33:56 2023
 @author: Moha-Cate
 """
 
-import pandas
 import numpy as np
 
 import os
-import pickle
 
 import matplotlib.pyplot as plt
 import seaborn as sns
-from scipy import stats
-import scipy.stats as st
 import pandas as pd
-from tqdm import tqdm
 
 sns.set_style("whitegrid")
 
@@ -163,15 +158,8 @@ img_size = 256
 binary = False
 
 import torch
-from models.attnet import AttNet
 from models.cenet import CENet
 from models.deeplabv3plus import DeepLabV3Plus
-from models.doubleunet import DoubleUnet
-from models.mnet import MNet
-from models.mobilenet_unet import MobileNetUnet
-from models.resnet_unet import ResNetUnet
-from models.resunet import ResUnet
-from models.unet import Unet
 from models.unetpp import UnetPlusPlus
 
 from utils.data_utils import * 
@@ -199,15 +187,8 @@ for counter_model in range(len(list_models)):
     flag_done_thisMethod_jacc = False
     
     model = {
-        'attnet': AttNet,
         'cenet': CENet,
         'deeplabv3plus': DeepLabV3Plus,
-        'doubleunet': DoubleUnet,
-        'mnet': MNet,
-        'mobilenet_unet': MobileNetUnet,
-        'resnet_unet': ResNetUnet,
-        'resunet': ResUnet,
-        'unet': Unet,
         'unetpp': UnetPlusPlus
     }[model_name]((img_size[0],img_size[1],3), 2 if binary else 3) # only important for unet models, SOTA models have their own size/n_channels and this will be disregarded
     
