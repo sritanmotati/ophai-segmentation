@@ -35,6 +35,8 @@ optional arguments:
                         multi-class (False).
 ```
 
+Example usage: `python main_train.py --model-name unetpp --name-csv-train train.csv --data-dir /path/to/data --path-save /path/to/save/model --img-size 256 --batch-size 8 --binary True`
+
 # Evaluating a model
 To save the predictions of a saved model on a testing dataset and calculate the metrics (code in `metrics.py`), use `main_test.py`.
 
@@ -70,5 +72,14 @@ optional arguments:
                         multi-class (False).
 ```
 
+Example usage: `python main_test.py --model-name unetpp --name-csv-test test.csv --data-dir /path/to/data --path-model /path/to/saved/model --img-size 256 --path-save-results /path/to/save/results --save-masks True --binary True`
+
 # Figures and statistics
-To recreate the figures in the abstract, run `main_create_summary_results.py` and then run `main_plots.py`. To obtain the data for the metrics table reported in the abstract, run `main_stats.py`.
+To recreate the figures in the abstract, run `main_create_summary_results.py` and then run `main_plots.py`. To obtain the data for the metrics table reported in the abstract, run `main_stats.py`. You may need to replace the paths to the results files and the desired summary files in the code.
+
+Example usage:
+```
+python main_create_summary_results.py
+python main_plots.py
+python main_stats.py
+```
